@@ -56,12 +56,12 @@ bot.onText(/\/status/, async (msg) => {
 
   // Foydalanuvchi avtorizatsiyadan o‘tganmi?
   if (authorizedUsers.has(chatId)) {
-    bot.sendMessage(chatId, 
+    bot.sendMessage(chatId,
       "✅ Akauntingiz bog‘langan! Siz bildirishnomalarni qabul qilayapsiz.\n\n" +
       "⚙ Agar o‘zgartirmoqchi bo‘lsangiz, /settings buyrug‘ini bering."
     );
   } else {
-    bot.sendMessage(chatId, 
+    bot.sendMessage(chatId,
       "❌ Siz hali ro‘yxatdan o‘tmadingiz.\n\n" +
       "Ro‘yxatdan o‘tish uchun /register buyrug‘ini bering."
     );
@@ -137,7 +137,7 @@ bot.on("message", async (msg) => {
 
         if (allSymbols.length > 0) {
           let message = "🟢 Sizga bog‘langan aktiv symbols lar:\n\n";
-          message +=` 🔔 Symbols: ${[...new Set(allSymbols)].join(", ")}\n;`
+          message += ` 🔔 Symbols: ${[...new Set(allSymbols)].join(", ")}\n;`
           bot.sendMessage(chatId, message);
         } else {
           bot.sendMessage(chatId, "⚠ Sizga hech qanday symbol bog‘lanmagan.");
@@ -149,7 +149,7 @@ bot.on("message", async (msg) => {
       // 🔹 Foydalanuvchiga "Ahsan Labs" tugmasini yuborish
       bot.sendMessage(
         chatId,
-       ` ✅ Avtorizatsiya muvaffaqiyatli! Xush kelibsiz, ${userData.name}!`,
+        ` ✅ Avtorizatsiya muvaffaqiyatli! Xush kelibsiz, ${userData.name}!`,
         {
           reply_markup: {
             inline_keyboard: [
@@ -182,7 +182,7 @@ bot.on("message", async (msg) => {
 
 // 🔹 Telegram xabarlari uchun maxsus belgilarni qochirish (MarkdownV2 uchun)
 function escapeMarkdownV2(text) {
-    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
+  return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
 }
 
 
@@ -191,89 +191,89 @@ function escapeMarkdownV2(text) {
 // 🔹 Telegram xabarlari uchun maxsus belgilarni qochirish (MarkdownV2 uchun)
 // 🔹 Telegram xabarlari uchun maxsus belgilarni qochirish (MarkdownV2 uchun)
 function escapeMarkdownV2(text) {
-    if (!text || typeof text !== "string") return ""; // Agar matn bo‘lmasa, bo‘sh string qaytarish
-    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
+  if (!text || typeof text !== "string") return ""; // Agar matn bo‘lmasa, bo‘sh string qaytarish
+  return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
 }
 
 
 // 🔹 Real-time kuzatuv
 db.collection("analysis").orderBy("created_at", "desc").limit(10).onSnapshot(async (snapshot) => {
-    console.log("🔄 Yangi `analysis` ma'lumotlarini tekshirish...");
+  console.log("🔄 Yangi `analysis` ma'lumotlarini tekshirish...");
 
-    const now = new Date();
-    const fifteenMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000); // 15 daqiqa oldin
+  const now = new Date();
+  const fifteenMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000); // 15 daqiqa oldin
 
-    snapshot.forEach(async (doc) => {
-        const analysisData = doc.data();
-        const createdAt = analysisData.created_at.toDate(); // Firestore timestamp'ini Date formatiga o‘girish
+  snapshot.forEach(async (doc) => {
+    const analysisData = doc.data();
+    const createdAt = analysisData.created_at.toDate(); // Firestore timestamp'ini Date formatiga o‘girish
 
-        // 🔹 Faqat oxirgi 15 daqiqada qo‘shilganlarni tekshirish
-        if (createdAt < fifteenMinutesAgo) {
-            return; // Agar ma'lumot 15 daqiqadan eski bo‘lsa, uni o‘tkazib yuboramiz
-        }
+    // 🔹 Faqat oxirgi 15 daqiqada qo‘shilganlarni tekshirish
+    if (createdAt < fifteenMinutesAgo) {
+      return; // Agar ma'lumot 15 daqiqadan eski bo‘lsa, uni o‘tkazib yuboramiz
+    }
 
-        const symbol = escapeMarkdownV2(analysisData.symbol);
-        const timeframe = escapeMarkdownV2(analysisData.timeframe_id);
+    const symbol = escapeMarkdownV2(analysisData.symbol);
+    const timeframe = escapeMarkdownV2(analysisData.timeframe_id);
 
-        console.log(`📜 Yangi Analysis: Symbol: ${symbol}, Timeframe: ${timeframe}, Vaqti: ${createdAt}`);
+    console.log(`📜 Yangi Analysis: Symbol: ${symbol}, Timeframe: ${timeframe}, Vaqti: ${createdAt}`);
 
-        // 🔹 `alerts` kolleksiyasidan `symbol` bo‘yicha user_id larni olish
-        const symbolAlertsSnapshot = await db.collection("alerts")
-            .where("symbols", "array-contains", symbol)
-            .get();
+    // 🔹 `alerts` kolleksiyasidan `symbol` bo‘yicha user_id larni olish
+    const symbolAlertsSnapshot = await db.collection("alerts")
+      .where("symbols", "array-contains", symbol)
+      .get();
 
-        // 🔹 `alerts` kolleksiyasidan `timeframe` bo‘yicha user_id larni olish
-        const timeframeAlertsSnapshot = await db.collection("alerts")
-            .where("timeframes", "array-contains", timeframe)
-            .get();
+    // 🔹 `alerts` kolleksiyasidan `timeframe` bo‘yicha user_id larni olish
+    const timeframeAlertsSnapshot = await db.collection("alerts")
+      .where("timeframes", "array-contains", timeframe)
+      .get();
 
-        let userIds = new Set();
-        
-        // 🔹 Symbol bo‘yicha alertlar
-        symbolAlertsSnapshot.forEach(alertDoc => {
-            const alertData = alertDoc.data();
-            userIds.add(alertData.user_id);
-        });
+    let userIds = new Set();
 
-        // 🔹 Timeframe bo‘yicha alertlar (qo‘shilib ketmasligi uchun yana qo‘shamiz)
-        timeframeAlertsSnapshot.forEach(alertDoc => {
-            const alertData = alertDoc.data();
-            userIds.add(alertData.user_id);
-        });
-
-        console.log(`👤 Ushbu analysis uchun bog‘langan user_id lar:`, Array.from(userIds));
-
-        // 🔹 `users` kolleksiyasidan `chatId` larni olish faqat `userIds` bo‘sh bo‘lmasa
-        if (userIds.size > 0) {
-            const usersSnapshot = await db.collection("users")
-                .where("user_id", "in", Array.from(userIds))
-                .get();
-
-            let chatIds = [];
-            if (!usersSnapshot.empty) {
-                usersSnapshot.forEach(userDoc => {
-                    const userData = userDoc.data();
-                    if (userData.chatId) {
-                        chatIds.push(userData.chatId);
-                    }
-                });
-            }
-
-            console.log(`📩 Ushbu foydalanuvchilarga xabar yuborish mumkin:`, chatIds);
-
-            // 🔹 Telegram bot orqali foydalanuvchilarga xabar yuborish
-            if (chatIds.length > 0) {
-                const message = `📊 *Yangi Analiz Qo‘shildi\\!* \n\n` +
-                    `🔹 *Symbol:* ${symbol} \n` +
-                    `⏳ *Timeframe:* ${timeframe} \n\n` +
-                    `📢 Ushbu valyutaga yangi analiz qo‘shildi\\!`;
-
-                chatIds.forEach(chatId => {
-                    bot.sendMessage(chatId, message, { parse_mode: "MarkdownV2" });
-                });
-            }
-        } else {
-            console.log(`⚠ Ushbu analysis uchun hech qanday user_id topilmadi.`);
-        }
+    // 🔹 Symbol bo‘yicha alertlar
+    symbolAlertsSnapshot.forEach(alertDoc => {
+      const alertData = alertDoc.data();
+      userIds.add(alertData.user_id);
     });
+
+    // 🔹 Timeframe bo‘yicha alertlar (qo‘shilib ketmasligi uchun yana qo‘shamiz)
+    timeframeAlertsSnapshot.forEach(alertDoc => {
+      const alertData = alertDoc.data();
+      userIds.add(alertData.user_id);
+    });
+
+    console.log(`👤 Ushbu analysis uchun bog‘langan user_id lar:`, Array.from(userIds));
+
+    // 🔹 `users` kolleksiyasidan `chatId` larni olish faqat `userIds` bo‘sh bo‘lmasa
+    if (userIds.size > 0) {
+      const usersSnapshot = await db.collection("users")
+        .where("user_id", "in", Array.from(userIds))
+        .get();
+
+      let chatIds = [];
+      if (!usersSnapshot.empty) {
+        usersSnapshot.forEach(userDoc => {
+          const userData = userDoc.data();
+          if (userData.chatId) {
+            chatIds.push(userData.chatId);
+          }
+        });
+      }
+
+      console.log(`📩 Ushbu foydalanuvchilarga xabar yuborish mumkin:`, chatIds);
+
+      // 🔹 Telegram bot orqali foydalanuvchilarga xabar yuborish
+      if (chatIds.length > 0) {
+        const message = `📊 *Yangi Analiz Qo‘shildi\\!* \n\n` +
+          `🔹 *Symbol:* ${symbol} \n` +
+          `⏳ *Timeframe:* ${timeframe} \n\n` +
+          `📢 Ushbu valyutaga yangi analiz qo‘shildi\\!`;
+
+        chatIds.forEach(chatId => {
+          bot.sendMessage(chatId, message, { parse_mode: "MarkdownV2" });
+        });
+      }
+    } else {
+      console.log(`⚠ Ushbu analysis uchun hech qanday user_id topilmadi.`);
+    }
+  });
 });

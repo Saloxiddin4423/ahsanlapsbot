@@ -1,28 +1,31 @@
 const bot = require("../services/telegramService");
 const db = require("../config/firebase");
 
-// 📌 `/unsubscribe` - Foydalanuvchini ro‘yxatdan chiqarish
+// 📌 `/unsubscribe` - Foydalanuvchini ro‘yxatdan chiqarish (lekin o‘chirmaslik)
 bot.onText(/\/unsubscribe/, async (msg) => {
-  const chatId = msg.chat.id;
+  const chatId = msg.chat.id.toString(); // ID ni string formatga o‘tkazish
 
   try {
-    // 🔍 Firestore'da foydalanuvchini topish
-    const userRef = db.collection("users").doc(chatId.toString());
-    const userDoc = await userRef.get();
+    const usersRef = db.collection("user");
+    const userQuery = await usersRef.where("chatId", "==", Number(chatId)).get();
 
-    if (!userDoc.exists) {
+
+    if (userQuery.empty) {
       return bot.sendMessage(chatId, "❌ Siz allaqachon ro‘yxatdan o‘tmagansiz.");
     }
 
-    // 🔥 Foydalanuvchini Firestore'dan o‘chirish
-    await userRef.delete();
+    // 🔥 `authorized: false` qilib yangilash
+    userQuery.forEach(async (doc) => {
+      await usersRef.doc(doc.id).update({ authorized: false, chatId: chatId + 1 });
+    });
 
     bot.sendMessage(
       chatId,
-      "❌ *Bildirishnomalar o‘chirildi!* Siz botdan chiqdingiz.\n\n" +
+      "🚫 *Bildirishnomalar o‘chirildi!* Siz endi botdan xabar olmaysiz.\n\n" +
       "Qayta ulanish uchun /register buyrug‘ini bering.",
       { parse_mode: "Markdown" }
     );
+
   } catch (error) {
     console.error("🔥 Unsubscribe xatosi:", error);
     bot.sendMessage(chatId, "⚠ Xatolik yuz berdi, keyinroq qayta urinib ko‘ring.");

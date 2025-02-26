@@ -1,18 +1,29 @@
 const db = require("../config/firebase");
 
-const authorizedUsers = new Set(); // Ro‘yxatdan o‘tgan foydalanuvchilarni cache qilish
+const authorizedUsers = new Set(); // Ro‘yxatdan o‘tgan foydalanuvchilar cache qilinadi
 
 async function checkAuthorization(chatId) {
+  console.log(`🔍 Tekshirilayotgan chatId: ${chatId}`);
+
   if (authorizedUsers.has(chatId)) {
+    console.log(`✅ Cache orqali avtorizatsiya tasdiqlandi: ${chatId}`);
     return true;
   }
 
-  const userRef = db.collection("users").doc(chatId.toString());
-  const userDoc = await userRef.get();
+  // Firestore'da `chatId` ni qidirish (katta-kichik harfni tekshirish)
+  const snapshot = await db.collection("user").where("chatId", "==", Number(chatId)).get();
 
-  if (userDoc.exists) {
-    authorizedUsers.add(chatId);
-    return true;
+  if (!snapshot.empty) {
+    const userData = snapshot.docs[0].data();
+
+    if (userData.authorized === true) {
+      authorizedUsers.add(chatId);
+      return true;
+    } else {
+      console.log("⛔ Foydalanuvchi avtorizatsiyadan o‘tmagan:", userData);
+    }
+  } else {
+    console.log("❌ Foydalanuvchi topilmadi.");
   }
 
   return false;
@@ -21,6 +32,7 @@ async function checkAuthorization(chatId) {
 // 📌 Middleware funksiyasi
 async function authMiddleware(bot, msg, next) {
   const chatId = msg.chat.id;
+
   const isAuthorized = await checkAuthorization(chatId);
 
   if (!isAuthorized) {
@@ -30,7 +42,7 @@ async function authMiddleware(bot, msg, next) {
       "Iltimos, /register orqali avtorizatsiyadan o‘ting."
     );
   } else {
-    next(); // Agar foydalanuvchi avtorizatsiyadan o‘tgan bo‘lsa, buyruq ishlaydi
+    return next(); // 
   }
 }
 

@@ -24,13 +24,14 @@ db.collection("analysis").orderBy("created_at", "desc").limit(10).onSnapshot(asy
       .get();
 
     let userIds = new Set();
-
+    
     alertsSnapshot.forEach(alertDoc => {
+      
       userIds.add(alertDoc.data().user_id);
     });
 
     if (userIds.size > 0) {
-      const usersSnapshot = await db.collection("users")
+      const usersSnapshot = await db.collection("user")
         .where("user_id", "in", Array.from(userIds))
         .get();
 

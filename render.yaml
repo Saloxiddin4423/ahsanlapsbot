@@ -1,0 +1,6 @@
+services:
+  - type: background
+    name: telegram-bot
+    env: node
+    buildCommand: npm install
+    startCommand: node bot.js
